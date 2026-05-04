@@ -5,9 +5,12 @@ import {
   Text,
   TextInput,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroDoacoesStyles";
+import { salvarDoacao } from "../services/doacaoService";
 
 export default function CadastroDoacoes({ setScreen }) {
   const [tipoAlimento, setTipoAlimento] = useState("");
@@ -16,10 +19,30 @@ export default function CadastroDoacoes({ setScreen }) {
   const [localizacao, setLocalizacao] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [publicado, setPublicado] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
-  const handlePublicar = () => {
-    setPublicado(true);
-  };
+  async function handlePublicar() {
+    if (!tipoAlimento || !quantidade || !localizacao) {
+      Alert.alert("Atenção", "Tipo de alimento, quantidade e localização são obrigatórios.");
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      await salvarDoacao({
+        tipoAlimento,
+        quantidade,
+        horario,
+        localizacao,
+        observacoes,
+      });
+      setPublicado(true);
+    } catch (erro) {
+      Alert.alert("Erro ao publicar doação", erro.message);
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -88,8 +111,16 @@ export default function CadastroDoacoes({ setScreen }) {
         />
       </View>
 
-      <Pressable style={styles.submitButton} onPress={handlePublicar}>
-        <Text style={styles.submitButtonText}>Publicar</Text>
+      <Pressable
+        style={styles.submitButton}
+        onPress={handlePublicar}
+        disabled={carregando}
+      >
+        {carregando ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Publicar</Text>
+        )}
       </Pressable>
 
       {publicado && (
