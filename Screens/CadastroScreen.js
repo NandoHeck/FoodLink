@@ -5,12 +5,48 @@ import {
   Text,
   TextInput,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroStyle";
+import { salvarUsuario } from "../services/usuarioService";
 
 export default function CadastroScreen({ setScreen }) {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [localizacao, setLocalizacao] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState("receptor");
+  const [carregando, setCarregando] = useState(false);
+
+  async function handleCadastro() {
+    if (!nome || !email || !senha) {
+      Alert.alert("Atenção", "Nome, email e senha são obrigatórios.");
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      // UID temporário para teste — será substituído pelo Auth do Gabriel
+      const uidTemporario = `temp_${Date.now()}`;
+
+      await salvarUsuario(uidTemporario, {
+        nome,
+        email,
+        telefone,
+        localizacao,
+        tipo: tipoUsuario,
+      });
+
+      setScreen(tipoUsuario === "receptor" ? "homeReceptor" : "homeDoador");
+    } catch (erro) {
+      Alert.alert("Erro ao salvar usuário", erro.message);
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -26,6 +62,8 @@ export default function CadastroScreen({ setScreen }) {
           style={styles.input}
           placeholder="Seu nome completo"
           placeholderTextColor="#9AA0A6"
+          value={nome}
+          onChangeText={setNome}
         />
       </View>
 
@@ -37,6 +75,8 @@ export default function CadastroScreen({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -47,6 +87,8 @@ export default function CadastroScreen({ setScreen }) {
           placeholder="••••••••"
           placeholderTextColor="#9AA0A6"
           secureTextEntry
+          value={senha}
+          onChangeText={setSenha}
         />
       </View>
 
@@ -57,6 +99,8 @@ export default function CadastroScreen({ setScreen }) {
           placeholder="(85) 99999-9999"
           placeholderTextColor="#9AA0A6"
           keyboardType="phone-pad"
+          value={telefone}
+          onChangeText={setTelefone}
         />
       </View>
 
@@ -66,12 +110,13 @@ export default function CadastroScreen({ setScreen }) {
           style={styles.input}
           placeholder="Cidade - Estado"
           placeholderTextColor="#9AA0A6"
+          value={localizacao}
+          onChangeText={setLocalizacao}
         />
       </View>
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Tipo de usuário</Text>
-
         <View style={styles.userTypeRow}>
           <Pressable
             style={[
@@ -102,7 +147,8 @@ export default function CadastroScreen({ setScreen }) {
               style={[
                 styles.userTypeButtonText,
                 styles.userTypeButtonTextGreenBase,
-                tipoUsuario === "receptor" && styles.userTypeButtonTextActiveGreen,
+                tipoUsuario === "receptor" &&
+                  styles.userTypeButtonTextActiveGreen,
               ]}
             >
               Sou receptor
@@ -113,11 +159,14 @@ export default function CadastroScreen({ setScreen }) {
 
       <Pressable
         style={styles.submitButton}
-        onPress={() =>
-          setScreen(tipoUsuario === "receptor" ? "homeReceptor" : "homeDoador")
-        }
+        onPress={handleCadastro}
+        disabled={carregando}
       >
-        <Text style={styles.submitButtonText}>Criar conta</Text>
+        {carregando ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Criar conta</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
