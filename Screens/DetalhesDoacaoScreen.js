@@ -20,7 +20,6 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
-
           <Text style={styles.headerTitle}>Detalhes da doação</Text>
         </View>
 
@@ -37,6 +36,12 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
     );
   }
 
+  const foodName     = donation.foodName     || donation.tipoAlimento  || "";
+  const quantity     = donation.quantity     || donation.quantidade    || "";
+  const schedule     = donation.schedule     || donation.horario       || "";
+  const location     = donation.location     || donation.localizacao   || "";
+  const observations = donation.observations || donation.observacoes   || "";
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -46,19 +51,18 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
-
         <Text style={styles.headerTitle}>Detalhes da doação</Text>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.foodTitle}>{donation.foodName}</Text>
+        <Text style={styles.foodTitle}>{foodName}</Text>
 
         <View style={styles.infoBlock}>
           <View style={styles.infoRow}>
             <Ionicons name="cube-outline" size={22} color="#2E7D32" />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Quantidade</Text>
-              <Text style={styles.infoValue}>{donation.quantity}</Text>
+              <Text style={styles.infoValue}>{quantity}</Text>
             </View>
           </View>
 
@@ -66,7 +70,7 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
             <Ionicons name="time-outline" size={22} color="#2E7D32" />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Horário</Text>
-              <Text style={styles.infoValue}>{donation.schedule}</Text>
+              <Text style={styles.infoValue}>{schedule}</Text>
             </View>
           </View>
 
@@ -74,14 +78,14 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
             <Ionicons name="location-outline" size={22} color="#2E7D32" />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Localização</Text>
-              <Text style={styles.infoValue}>{donation.location}, CE</Text>
+              <Text style={styles.infoValue}>{location}, CE</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.observacoesBlock}>
           <Text style={styles.observacoesLabel}>Observações</Text>
-          <Text style={styles.observacoesText}>{donation.observations}</Text>
+          <Text style={styles.observacoesText}>{observations}</Text>
         </View>
 
         <Pressable style={styles.button} onPress={handleSolicitar}>
