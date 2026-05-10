@@ -26,6 +26,26 @@ export default function CadastroDoacoes({ setScreen }) {
       Alert.alert("Atenção", "Tipo de alimento, quantidade e localização são obrigatórios.");
       return;
     }
+    if (tipoAlimento.length > 60) {
+      Alert.alert("Atenção", "Tipo de alimento deve ter no máximo 60 caracteres.");
+      return;
+    }
+    if (quantidade.length > 30) {
+      Alert.alert("Atenção", "Quantidade deve ter no máximo 30 caracteres.");
+      return;
+    }
+    if (horario.length > 40) {
+      Alert.alert("Atenção", "Horário deve ter no máximo 40 caracteres.");
+      return;
+    }
+    if (localizacao.length > 80) {
+      Alert.alert("Atenção", "Localização deve ter no máximo 80 caracteres.");
+      return;
+    }
+    if (observacoes.length > 300) {
+      Alert.alert("Atenção", "Observações deve ter no máximo 300 caracteres.");
+      return;
+    }
 
     setCarregando(true);
     try {
@@ -63,6 +83,7 @@ export default function CadastroDoacoes({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={tipoAlimento}
           onChangeText={setTipoAlimento}
+          maxLength={60}
         />
       </View>
 
@@ -74,6 +95,7 @@ export default function CadastroDoacoes({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={quantidade}
           onChangeText={setQuantidade}
+          maxLength={30}
         />
       </View>
 
@@ -85,6 +107,7 @@ export default function CadastroDoacoes({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={horario}
           onChangeText={setHorario}
+          maxLength={40}
         />
       </View>
 
@@ -96,6 +119,7 @@ export default function CadastroDoacoes({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={localizacao}
           onChangeText={setLocalizacao}
+          maxLength={80}
         />
       </View>
 
@@ -108,6 +132,7 @@ export default function CadastroDoacoes({ setScreen }) {
           multiline
           value={observacoes}
           onChangeText={setObservacoes}
+          maxLength={300}
         />
       </View>
 
