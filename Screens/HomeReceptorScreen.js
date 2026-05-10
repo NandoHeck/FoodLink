@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,49 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/HomeReceptorStyles";
-
-const doacoesMock = [
-  {
-    id: 1,
-    foodName: "Arroz 5kg",
-    quantity: "Disponível hoje",
-    location: "Eusébio",
-    schedule: "Hoje, 14h–18h",
-    observations: "Pacote fechado, dentro da validade.",
-  },
-  {
-    id: 2,
-    foodName: "Feijão 2kg",
-    quantity: "3 pacotes",
-    location: "Fortaleza",
-    schedule: "Amanhã, 9h–17h",
-    observations: "Feijão carioca, lacrado.",
-  },
-  {
-    id: 3,
-    foodName: "Macarrão 1kg",
-    quantity: "5 unidades",
-    location: "Aquiraz",
-    schedule: "Hoje, 10h–16h",
-    observations: "Massas variadas, embalagem intacta.",
-  },
-  {
-    id: 4,
-    foodName: "Leite 1L",
-    quantity: "10 caixas",
-    location: "Eusébio",
-    schedule: "Amanhã, 8h–12h",
-    observations: "Leite integral, caixas não abertas.",
-  },
-  {
-    id: 5,
-    foodName: "Óleo 900ml",
-    quantity: "4 unidades",
-    location: "Fortaleza",
-    schedule: "Sexta, 13h–17h",
-    observations: "Garrafas lacradas e em perfeito estado.",
-  },
-];
+import { buscarDoacoes } from "../services/doacaoService";
 
 function DonationCard({ foodName, quantity, location, onViewDetails }) {
   return (
@@ -72,13 +30,20 @@ function DonationCard({ foodName, quantity, location, onViewDetails }) {
 
 export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
   const [busca, setBusca] = useState("");
+  const [doacoes, setDoacoes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
 
-  const doacoesFiltradas = doacoesMock.filter((doacao) => {
+  useEffect(() => {
+    buscarDoacoes()
+      .then((dados) => setDoacoes(dados))
+      .finally(() => setCarregando(false));
+  }, []);
+
+  const doacoesFiltradas = doacoes.filter((doacao) => {
     const termo = busca.toLowerCase();
-    return (
-      doacao.foodName.toLowerCase().includes(termo) ||
-      doacao.location.toLowerCase().includes(termo)
-    );
+    const nome = (doacao.foodName || doacao.tipoAlimento || "").toLowerCase();
+    const local = (doacao.location || doacao.localizacao || "").toLowerCase();
+    return nome.includes(termo) || local.includes(termo);
   });
 
   return (
@@ -130,12 +95,24 @@ export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
       >
         <Text style={styles.sectionTitle}>Doações disponíveis</Text>
 
+        {carregando && (
+          <Text style={{ textAlign: "center", color: "#999", marginTop: 20 }}>
+            Carregando doações...
+          </Text>
+        )}
+
+        {!carregando && doacoesFiltradas.length === 0 && (
+          <Text style={{ textAlign: "center", color: "#999", marginTop: 20 }}>
+            Nenhuma doação disponível no momento.
+          </Text>
+        )}
+
         {doacoesFiltradas.map((doacao) => (
           <DonationCard
             key={doacao.id}
-            foodName={doacao.foodName}
-            quantity={doacao.quantity}
-            location={doacao.location}
+            foodName={doacao.foodName || doacao.tipoAlimento}
+            quantity={doacao.quantity || doacao.quantidade}
+            location={doacao.location || doacao.localizacao}
             onViewDetails={() => openDonationDetails(doacao)}
           />
         ))}
@@ -146,7 +123,6 @@ export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
           <Ionicons name="search-outline" size={22} color="#2E7D32" />
           <Text style={[styles.navText, styles.navTextActive]}>Buscar</Text>
         </Pressable>
-
 
         <Pressable style={styles.navItem}>
           <Ionicons name="time-outline" size={22} color="#757575" />
