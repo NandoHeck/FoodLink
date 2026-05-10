@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/HomeDoadorStyles";
+import { buscarDoacoesDoador } from "../services/doacaoService";
+import { getUidAtual } from "../userSession";
 
 function StatusCard({ icon, value, label }) {
   return (
@@ -20,14 +22,11 @@ function StatusCard({ icon, value, label }) {
   );
 }
 
-function DonationCard({ title, quantity, interested, empty }) {
+function DonationCard({ title, quantity, empty }) {
   return (
     <View style={styles.donationCard}>
       <View style={styles.donationHeader}>
         <Text style={styles.donationTitle}>{title}</Text>
-        <Pressable>
-          <Text style={styles.detailsLink}>Ver detalhes</Text>
-        </Pressable>
       </View>
 
       <Text style={styles.donationQuantity}>{quantity}</Text>
@@ -35,23 +34,40 @@ function DonationCard({ title, quantity, interested, empty }) {
       {!empty ? (
         <View style={styles.interestBadge}>
           <Ionicons name="alert-circle-outline" size={12} color="#F9A825" />
-          <Text style={styles.interestBadgeText}>{interested}</Text>
+          <Text style={styles.interestBadgeText}>Disponível</Text>
         </View>
       ) : (
-        <Text style={styles.noInterestText}>Nenhum interessado ainda</Text>
+        <Text style={styles.noInterestText}>Nenhuma doação ativa</Text>
       )}
     </View>
   );
 }
 
 export default function HomeDoadorScreen({ setScreen }) {
+  const [doacoesAtivas, setDoacoesAtivas] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    const uid = getUidAtual();
+    if (uid) {
+      buscarDoacoesDoador(uid)
+        .then((dados) => setDoacoesAtivas(dados))
+        .finally(() => setCarregando(false));
+    } else {
+      setCarregando(false);
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.leftHeader}>
-              <Pressable style={styles.backButton} onPress={() => setScreen("inicio")}>
+              <Pressable
+                style={styles.backButton}
+                onPress={() => setScreen("inicio")}
+              >
                 <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
               </Pressable>
 
@@ -61,27 +77,48 @@ export default function HomeDoadorScreen({ setScreen }) {
               </View>
             </View>
 
-            <Pressable style={styles.profileButton} onPress={() => setScreen("profile")}>
+            <Pressable
+              style={styles.profileButton}
+              onPress={() => setScreen("profile")}
+            >
               <Ionicons name="person-outline" size={20} color="#FFFFFF" />
             </Pressable>
           </View>
         </View>
 
-      <View style={styles.statusRow}>
-        <View style={styles.statusCardWrapper}>
-          <StatusCard icon="cube-outline" value="3" label="Doações ativas" />
+        <View style={styles.statusRow}>
+          <View style={styles.statusCardWrapper}>
+            <StatusCard
+              icon="cube-outline"
+              value={doacoesAtivas.length.toString()}
+              label="Doações ativas"
+            />
+          </View>
+          <View style={styles.statusCardWrapper}>
+            <StatusCard
+              icon="notifications-outline"
+              value="0"
+              label="Solicitações"
+            />
+          </View>
+          <Pressable
+            style={styles.statusCardWrapper}
+            onPress={() => setScreen("resumoImpacto")}
+          >
+            <StatusCard
+              icon="trending-up-outline"
+              value={doacoesAtivas.length.toString()}
+              label="Total doado"
+            />
+          </Pressable>
         </View>
-        <View style={styles.statusCardWrapper}>
-          <StatusCard icon="notifications-outline" value="5" label="Solicitações" />
-        </View>
-        <Pressable style={styles.statusCardWrapper} onPress={() => setScreen("resumoImpacto")}>
-          <StatusCard icon="trending-up-outline" value="12" label="Total doado" />
-        </Pressable>
-      </View>
 
         <Text style={styles.sectionTitle}>Ações rápidas</Text>
 
-        <Pressable style={styles.mainActionCard}>
+        <Pressable
+          style={styles.mainActionCard}
+          onPress={() => setScreen("cadastroDoacoes")}
+        >
           <View style={styles.mainActionTextArea}>
             <Text style={styles.mainActionTitle}>Cadastrar nova doação</Text>
             <Text style={styles.mainActionSubtitle}>
@@ -103,11 +140,6 @@ export default function HomeDoadorScreen({ setScreen }) {
             <Text style={styles.secondaryActionSubtitle}>
               Veja quem solicitou suas doações
             </Text>
-
-            <View style={styles.requestBadge}>
-              <Ionicons name="notifications-outline" size={12} color="#F9A825" />
-              <Text style={styles.requestBadgeText}>5 novas solicitações</Text>
-            </View>
           </View>
 
           <View style={styles.secondaryIconCircle}>
@@ -117,23 +149,28 @@ export default function HomeDoadorScreen({ setScreen }) {
 
         <Text style={styles.sectionTitle}>Suas doações ativas</Text>
 
-        <DonationCard
-          title="Arroz 5kg"
-          quantity="Disponível hoje"
-          interested="3 interessados"
-        />
+        {carregando && (
+          <Text style={{ textAlign: "center", color: "#999", marginTop: 10 }}>
+            Carregando...
+          </Text>
+        )}
 
-        <DonationCard
-          title="Feijão 2kg"
-          quantity="3 pacotes"
-          interested="2 interessados"
-        />
+        {!carregando && doacoesAtivas.length === 0 && (
+          <DonationCard
+            title="Nenhuma doação ativa"
+            quantity="Cadastre uma doação para começar"
+            empty
+          />
+        )}
 
-        <DonationCard
-          title="Macarrão 1kg"
-          quantity="5 unidades"
-          empty
-        />
+        {doacoesAtivas.map((doacao) => (
+          <DonationCard
+            key={doacao.id}
+            title={doacao.tipoAlimento}
+            quantity={doacao.quantidade}
+            empty={false}
+          />
+        ))}
       </ScrollView>
 
       <View style={styles.bottomNav}>
@@ -142,16 +179,22 @@ export default function HomeDoadorScreen({ setScreen }) {
           <Text style={[styles.navText, styles.navTextActive]}>Dashboard</Text>
         </Pressable>
 
-        <Pressable style={styles.navItem} onPress={() => setScreen("cadastroDoacoes")}>
+        <Pressable
+          style={styles.navItem}
+          onPress={() => setScreen("cadastroDoacoes")}
+        >
           <View style={styles.navPlusButton}>
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.navText}>Doar</Text>
         </Pressable>
 
-        <Pressable style={styles.navItem} onPress={() => setScreen("historico")}>
+        <Pressable
+          style={styles.navItem}
+          onPress={() => setScreen("historico")}
+        >
           <Ionicons name="time-outline" size={22} color="#757575" />
-            <Text style={styles.navText}>Histórico</Text>
+          <Text style={styles.navText}>Histórico</Text>
         </Pressable>
       </View>
     </View>
