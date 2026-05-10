@@ -11,8 +11,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroStyle";
 import { salvarUsuario } from "../services/usuarioService";
+import { setUidAtual } from "../userSession";
 
-export default function CadastroScreen({ setScreen }) {
+export default function CadastroScreen({ setScreen, setUsuario }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -22,24 +23,53 @@ export default function CadastroScreen({ setScreen }) {
   const [carregando, setCarregando] = useState(false);
 
   async function handleCadastro() {
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
     if (!nome || !email || !senha) {
       Alert.alert("Atenção", "Nome, email e senha são obrigatórios.");
+      return;
+    }
+    if (nome.length > 60) {
+      Alert.alert("Atenção", "Nome deve ter no máximo 60 caracteres.");
+      return;
+    }
+    if (!emailValido) {
+      Alert.alert("Atenção", "Digite um email válido.");
+      return;
+    }
+    if (email.length > 100) {
+      Alert.alert("Atenção", "Email muito longo.");
+      return;
+    }
+    if (senha.length < 6) {
+      Alert.alert("Atenção", "Senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+    if (senha.length > 30) {
+      Alert.alert("Atenção", "Senha deve ter no máximo 30 caracteres.");
+      return;
+    }
+    if (telefone && telefone.length > 15) {
+      Alert.alert("Atenção", "Telefone inválido.");
+      return;
+    }
+    if (localizacao.length > 80) {
+      Alert.alert("Atenção", "Localização deve ter no máximo 80 caracteres.");
       return;
     }
 
     setCarregando(true);
     try {
-      // UID temporário para teste — será substituído pelo Auth do Gabriel
-      const uidTemporario = `temp_${Date.now()}`;
-
-      await salvarUsuario(uidTemporario, {
+      const uid = email.toLowerCase();
+      await salvarUsuario(uid, {
         nome,
         email,
         telefone,
         localizacao,
         tipo: tipoUsuario,
       });
-
+      setUidAtual(uid);
+      setUsuario({ nome, email, tipo: tipoUsuario });
       setScreen(tipoUsuario === "receptor" ? "homeReceptor" : "homeDoador");
     } catch (erro) {
       Alert.alert("Erro ao salvar usuário", erro.message);
@@ -64,6 +94,7 @@ export default function CadastroScreen({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={nome}
           onChangeText={setNome}
+          maxLength={60}
         />
       </View>
 
@@ -77,6 +108,7 @@ export default function CadastroScreen({ setScreen }) {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
+          maxLength={100}
         />
       </View>
 
@@ -89,6 +121,7 @@ export default function CadastroScreen({ setScreen }) {
           secureTextEntry
           value={senha}
           onChangeText={setSenha}
+          maxLength={30}
         />
       </View>
 
@@ -101,6 +134,7 @@ export default function CadastroScreen({ setScreen }) {
           keyboardType="phone-pad"
           value={telefone}
           onChangeText={setTelefone}
+          maxLength={15}
         />
       </View>
 
@@ -112,6 +146,7 @@ export default function CadastroScreen({ setScreen }) {
           placeholderTextColor="#9AA0A6"
           value={localizacao}
           onChangeText={setLocalizacao}
+          maxLength={80}
         />
       </View>
 
