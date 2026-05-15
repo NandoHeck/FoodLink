@@ -8,15 +8,37 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/RecuperacaoStyles";
 
+import { recuperarSenha } from "../services/authService";
+import { Alert, ActivityIndicator } from "react-native";
+
 export default function RecuperacaoScreen({ setScreen }) {
   const [email, setEmail] = useState("");
   const [linkEnviado, setLinkEnviado] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
-  const handleEnviarLink = () => {
-    if (email.trim() !== "") {
+  const handleEnviarLink = async () => {
+    if (email.trim() === "") {
+      Alert.alert("Atenção", "Por favor, digite seu e-mail.");
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      await recuperarSenha(email);
       setLinkEnviado(true);
+    } catch (error) {
+      let mensagem = "Ocorreu um erro ao enviar o e-mail de recuperação.";
+      if (error.code === 'auth/user-not-found') {
+        mensagem = "Usuário não encontrado com este e-mail.";
+      } else if (error.code === 'auth/invalid-email') {
+        mensagem = "E-mail inválido.";
+      }
+      Alert.alert("Erro", mensagem);
+    } finally {
+      setCarregando(false);
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -42,9 +64,14 @@ export default function RecuperacaoScreen({ setScreen }) {
         />
       </View>
 
-      <Pressable style={styles.button} onPress={handleEnviarLink}>
-        <Text style={styles.buttonText}>Enviar link</Text>
+      <Pressable style={styles.button} onPress={handleEnviarLink} disabled={carregando}>
+        {carregando ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Enviar link</Text>
+        )}
       </Pressable>
+
 
       {linkEnviado && (
         <View style={styles.popup}>
