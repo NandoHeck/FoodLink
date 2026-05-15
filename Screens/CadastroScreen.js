@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroStyle";
-import { salvarUsuario } from "../services/usuarioService";
+import { cadastrarUsuario } from "../services/authService";
 import { setUidAtual } from "../userSession";
 
 export default function CadastroScreen({ setScreen, setUsuario }) {
@@ -60,19 +60,21 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
 
     setCarregando(true);
     try {
-      const uid = email.toLowerCase();
-      await salvarUsuario(uid, {
+      const usuarioCriado = await cadastrarUsuario(email, senha, {
         nome,
-        email,
         telefone,
         localizacao,
         tipo: tipoUsuario,
       });
-      setUidAtual(uid);
-      setUsuario({ nome, email, tipo: tipoUsuario });
+      setUidAtual(usuarioCriado.uid);
+      setUsuario(usuarioCriado);
       setScreen(tipoUsuario === "receptor" ? "homeReceptor" : "homeDoador");
     } catch (erro) {
-      Alert.alert("Erro ao salvar usuário", erro.message);
+      if (erro.code === "auth/email-already-in-use") {
+        Alert.alert("Atenção", "Este email já está cadastrado.");
+      } else {
+        Alert.alert("Erro ao criar conta", erro.message);
+      }
     } finally {
       setCarregando(false);
     }
@@ -205,4 +207,4 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
       </Pressable>
     </ScrollView>
   );
-}
+} 
