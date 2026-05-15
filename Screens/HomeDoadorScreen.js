@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
+  RefreshControl,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/HomeDoadorStyles";
-import { buscarDoacoesDoador } from "../services/doacaoService";
-import { getUidAtual } from "../userSession";
+import {
+  buscarDoacoesDoador,
+  buscarTotalDoado,
+  buscarTotalSolicitacoes,
+} from "../services/doacaoService";
+import { getUidAtual, setUidAtual } from "../userSession";
 
 function StatusCard({ icon, value, label }) {
   return (
@@ -45,28 +51,81 @@ function DonationCard({ title, quantity, empty }) {
 
 export default function HomeDoadorScreen({ setScreen }) {
   const [doacoesAtivas, setDoacoesAtivas] = useState([]);
+  const [totalDoado, setTotalDoado] = useState(0);
+  const [totalSolicitacoes, setTotalSolicitacoes] = useState(0);
   const [carregando, setCarregando] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const carregarDados = useCallback(async () => {
     const uid = getUidAtual();
-    if (uid) {
-      buscarDoacoesDoador(uid)
-        .then((dados) => setDoacoesAtivas(dados))
-        .finally(() => setCarregando(false));
-    } else {
+    if (!uid) {
       setCarregando(false);
+      return;
+    }
+
+    try {
+      const [ativas, total, solicitacoes] = await Promise.all([
+        buscarDoacoesDoador(uid),
+        buscarTotalDoado(uid),
+        buscarTotalSolicitacoes(uid),
+      ]);
+      setDoacoesAtivas(ativas);
+      setTotalDoado(total);
+      setTotalSolicitacoes(solicitacoes);
+    } finally {
+      setCarregando(false);
+      setRefreshing(false);
     }
   }, []);
 
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    carregarDados();
+  };
+
+  const handleSair = () => {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza que deseja sair?",
+      [
+        {
+          text: "Não",
+          style: "cancel",
+        },
+        {
+          text: "Sim, sair",
+          style: "destructive",
+          onPress: () => {
+            setUidAtual(null);
+            setScreen("inicio");
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#2E7D32"]}
+          />
+        }
+      >
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.leftHeader}>
               <Pressable
                 style={styles.backButton}
-                onPress={() => setScreen("inicio")}
+                onPress={handleSair}
               >
                 <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
               </Pressable>
@@ -97,7 +156,7 @@ export default function HomeDoadorScreen({ setScreen }) {
           <View style={styles.statusCardWrapper}>
             <StatusCard
               icon="notifications-outline"
-              value="0"
+              value={totalSolicitacoes.toString()}
               label="Solicitações"
             />
           </View>
@@ -107,7 +166,7 @@ export default function HomeDoadorScreen({ setScreen }) {
           >
             <StatusCard
               icon="trending-up-outline"
-              value={doacoesAtivas.length.toString()}
+              value={totalDoado.toString()}
               label="Total doado"
             />
           </Pressable>
