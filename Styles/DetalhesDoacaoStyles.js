@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E7D32",
     paddingTop: 22,
     paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingBottom: 24,
   },
 
   backButton: {
@@ -31,7 +31,8 @@ const styles = StyleSheet.create({
 
   card: {
     marginHorizontal: 8,
-    marginTop: -46,
+    marginTop: 12,
+    marginBottom: 24,
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 22,
@@ -89,6 +90,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
     lineHeight: 24,
+  },
+
+  mensagemLabel: {
+    fontSize: 15,
+    color: "#6B7280",
+    marginBottom: 8,
+    marginTop: 12,
+  },
+
+  mensagemInput: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    color: "#111827",
+    minHeight: 100,
+    textAlignVertical: "top",
+    backgroundColor: "#F9FAFB",
+    marginBottom: 16,
   },
 
   button: {
