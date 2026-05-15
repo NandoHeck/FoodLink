@@ -5,10 +5,12 @@ import {
   TextInput,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/HomeReceptorStyles";
 import { buscarDoacoes } from "../services/doacaoService";
+import { setUidAtual } from "../userSession";
 
 function DonationCard({ foodName, quantity, location, onViewDetails }) {
   return (
@@ -46,6 +48,27 @@ export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
     return nome.includes(termo) || local.includes(termo);
   });
 
+  const handleSair = () => {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza que deseja sair?",
+      [
+        {
+          text: "Não",
+          style: "cancel",
+        },
+        {
+          text: "Sim, sair",
+          style: "destructive",
+          onPress: () => {
+            setUidAtual(null);
+            setScreen("inicio");
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -53,7 +76,7 @@ export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
           <View style={styles.leftHeader}>
             <Pressable
               style={styles.backButton}
-              onPress={() => setScreen("inicio")}
+              onPress={handleSair}
             >
               <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
             </Pressable>
@@ -124,7 +147,10 @@ export default function HomeReceptorScreen({ setScreen, openDonationDetails }) {
           <Text style={[styles.navText, styles.navTextActive]}>Buscar</Text>
         </Pressable>
 
-        <Pressable style={styles.navItem}>
+        <Pressable
+          style={styles.navItem}
+          onPress={() => setScreen("historicoReceptor")}
+        >
           <Ionicons name="time-outline" size={22} color="#757575" />
           <Text style={styles.navText}>Histórico</Text>
         </Pressable>
