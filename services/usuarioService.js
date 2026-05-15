@@ -1,5 +1,5 @@
-import firebase from 'firebase';
-import { db } from '../firebaseConfig';
+import { db, firebase } from '../firebaseConfig';
+
 
 export async function salvarUsuario(uid, dados) {
   await db.collection('usuarios').doc(uid).set({
@@ -17,5 +17,20 @@ export async function buscarUsuario(uid) {
   if (doc.exists) {
     return { uid: doc.id, ...doc.data() };
   }
+  return null;
+}
+
+
+export async function buscarUsuarioPorEmail(email) {
+  const snapshot = await db
+    .collection('usuarios')
+    .where('email', '==', email)
+    .get();
+
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    return { uid: doc.id, ...doc.data() };
+  }
+
   return null;
 }
