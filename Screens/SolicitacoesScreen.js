@@ -1,42 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Pressable,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/SolicitacoesStyles";
-
-const solicitacoesMock = [
-  {
-    id: 1,
-    nome: "Maria Silva",
-    alimento: "Arroz 5kg",
-    mensagem: "Preciso para complementar a alimentação da semana.",
-    status: "pendente",
-  },
-  {
-    id: 2,
-    nome: "João Santos",
-    alimento: "Feijão 2kg",
-    mensagem: "Gostaria de solicitar essa doação para minha família.",
-    status: "pendente",
-  },
-  {
-    id: 3,
-    nome: "Ana Paula",
-    alimento: "Macarrão 1kg",
-    mensagem: "Tenho interesse nessa doação, caso ainda esteja disponível.",
-    status: "pendente",
-  },
-];
+import {
+  buscarSolicitacoesDoador,
+  aceitarSolicitacao,
+  recusarSolicitacao,
+} from "../services/doacaoService";
+import { getUidAtual } from "../userSession";
 
 function SolicitacaoCard({ solicitacao, onAceitar, onRecusar }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.nome}>{solicitacao.nome}</Text>
-      <Text style={styles.alimento}>{solicitacao.alimento}</Text>
+      <Text style={styles.nome}>{solicitacao.nomeReceptor || "Receptor"}</Text>
+      <Text style={styles.alimento}>{solicitacao.tipoAlimento}</Text>
 
       <View style={styles.messageBox}>
         <Text style={styles.messageText}>{solicitacao.mensagem}</Text>
@@ -58,22 +42,41 @@ function SolicitacaoCard({ solicitacao, onAceitar, onRecusar }) {
 }
 
 export default function SolicitacoesScreen({ setScreen }) {
-  const [solicitacoes, setSolicitacoes] = useState(solicitacoesMock);
+  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [respondidas, setRespondidas] = useState({});
+  const [carregando, setCarregando] = useState(true);
 
-  const aceitarSolicitacao = (id) => {
-    setSolicitacoes((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: "aceita" } : item
-      )
-    );
+  useEffect(() => {
+    const uid = getUidAtual();
+    if (uid) {
+      buscarSolicitacoesDoador(uid)
+        .then((dados) => setSolicitacoes(dados))
+        .finally(() => setCarregando(false));
+    } else {
+      setCarregando(false);
+    }
+  }, []);
+
+  const handleAceitar = async (solicitacao) => {
+    try {
+      await aceitarSolicitacao(
+        solicitacao.id,
+        solicitacao.doacaoId,
+        solicitacao.uidReceptor
+      );
+      setRespondidas((prev) => ({ ...prev, [solicitacao.id]: "aceita" }));
+    } catch {
+      Alert.alert("Erro", "Não foi possível aceitar a solicitação.");
+    }
   };
 
-  const recusarSolicitacao = (id) => {
-    setSolicitacoes((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: "recusada" } : item
-      )
-    );
+  const handleRecusar = async (solicitacao) => {
+    try {
+      await recusarSolicitacao(solicitacao.id);
+      setRespondidas((prev) => ({ ...prev, [solicitacao.id]: "recusada" }));
+    } catch {
+      Alert.alert("Erro", "Não foi possível recusar a solicitação.");
+    }
   };
 
   return (
@@ -85,36 +88,52 @@ export default function SolicitacoesScreen({ setScreen }) {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
-
         <Text style={styles.headerTitle}>Solicitações recebidas</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {solicitacoes.map((solicitacao) => (
-          <View key={solicitacao.id}>
-            <SolicitacaoCard
-              solicitacao={solicitacao}
-              onAceitar={() => aceitarSolicitacao(solicitacao.id)}
-              onRecusar={() => recusarSolicitacao(solicitacao.id)}
-            />
+        {carregando && (
+          <ActivityIndicator color="#2E7D32" style={{ marginTop: 40 }} />
+        )}
 
-            {solicitacao.status === "aceita" && (
-              <View style={styles.feedbackSuccess}>
+        {!carregando && solicitacoes.length === 0 && (
+          <Text style={{ textAlign: "center", color: "#999", marginTop: 40 }}>
+            Nenhuma solicitação recebida ainda.
+          </Text>
+        )}
+
+        {solicitacoes.map((solicitacao) => {
+          const resposta = respondidas[solicitacao.id];
+
+          if (resposta === "aceita") {
+            return (
+              <View key={solicitacao.id} style={styles.feedbackSuccess}>
                 <Text style={styles.feedbackSuccessText}>
-                  Solicitação aceita com sucesso.
+                  Solicitação de {solicitacao.nomeReceptor || "receptor"} aceita. Doação marcada como concluída!
                 </Text>
               </View>
-            )}
+            );
+          }
 
-            {solicitacao.status === "recusada" && (
-              <View style={styles.feedbackError}>
+          if (resposta === "recusada") {
+            return (
+              <View key={solicitacao.id} style={styles.feedbackError}>
                 <Text style={styles.feedbackErrorText}>
-                  Solicitação recusada.
+                  Solicitação de {solicitacao.nomeReceptor || "receptor"} recusada.
                 </Text>
               </View>
-            )}
-          </View>
-        ))}
+            );
+          }
+
+          return (
+            <SolicitacaoCard
+              key={solicitacao.id}
+              solicitacao={solicitacao}
+              onAceitar={() => handleAceitar(solicitacao)}
+              onRecusar={() => handleRecusar(solicitacao)}
+            />
+          );
+        })}
       </ScrollView>
     </View>
   );
