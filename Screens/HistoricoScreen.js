@@ -20,9 +20,9 @@ function getStatusConfig(status) {
 function HistoricoCard({ item }) {
   const statusConfig = getStatusConfig(item.status);
 
-  const alimento  = item.alimento  || item.tipoAlimento || "";
+  const alimento = item.alimento || item.tipoAlimento || "";
   const descricao = item.descricao || "";
-  const data      = item.data      || (item.criadoEm?.toDate
+  const data = item.data || (item.criadoEm?.toDate
     ? item.criadoEm.toDate().toLocaleDateString("pt-BR")
     : "");
 
