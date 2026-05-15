@@ -16,10 +16,7 @@ export default function InicioScreen({ setScreen }) {
         <Text style={styles.buttonText}>Entrar</Text>
       </Pressable>
 
-       <Pressable style={styles.button} onPress={() => setScreen("loginDoador")}>
-        <Text style={styles.buttonText}>Entrar como Doador</Text>
-      </Pressable>
-
+     
       <Pressable style={styles.buttonOutline} onPress={() => setScreen("cadastro")}>
         <Text style={styles.buttonOutlineText}>Cadastrar</Text>
       </Pressable>
