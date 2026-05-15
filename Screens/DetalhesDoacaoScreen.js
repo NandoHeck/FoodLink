@@ -1,14 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/DetalhesDoacaoStyles";
+import { enviarSolicitacao } from "../services/doacaoService";
 
-export default function DetalhesDoacaoScreen({ setScreen, donation }) {
+export default function DetalhesDoacaoScreen({ setScreen, donation, usuario }) {
+  const [mensagem, setMensagem] = useState("");
   const [solicitado, setSolicitado] = useState(false);
-
-  const handleSolicitar = () => {
-    setSolicitado(true);
-  };
+  const [carregando, setCarregando] = useState(false);
 
   if (!donation) {
     return (
@@ -22,13 +29,9 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
           </Pressable>
           <Text style={styles.headerTitle}>Detalhes da doação</Text>
         </View>
-
         <View style={styles.card}>
           <Text style={styles.foodTitle}>Nenhuma doação selecionada</Text>
-          <Pressable
-            style={styles.button}
-            onPress={() => setScreen("homeReceptor")}
-          >
+          <Pressable style={styles.button} onPress={() => setScreen("homeReceptor")}>
             <Text style={styles.buttonText}>Voltar</Text>
           </Pressable>
         </View>
@@ -42,8 +45,29 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
   const location     = donation.location     || donation.localizacao   || "";
   const observations = donation.observations || donation.observacoes   || "";
 
+  const handleSolicitar = async () => {
+    if (!mensagem.trim()) {
+      Alert.alert("Atenção", "Escreva uma mensagem para o doador antes de solicitar.");
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      await enviarSolicitacao(donation.id, {
+        nomeReceptor: usuario?.nome || "Receptor",
+        mensagem,
+        tipoAlimento: foodName,
+      });
+      setSolicitado(true);
+    } catch (erro) {
+      Alert.alert("Erro", "Não foi possível enviar a solicitação.");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Pressable
           style={styles.backButton}
@@ -88,18 +112,42 @@ export default function DetalhesDoacaoScreen({ setScreen, donation }) {
           <Text style={styles.observacoesText}>{observations}</Text>
         </View>
 
-        <Pressable style={styles.button} onPress={handleSolicitar}>
-          <Text style={styles.buttonText}>Solicitar doação</Text>
-        </Pressable>
+        {!solicitado ? (
+          <>
+            <Text style={styles.mensagemLabel}>
+              Mensagem para o doador
+            </Text>
 
-        {solicitado && (
+            <TextInput
+              style={styles.mensagemInput}
+              placeholder="Escreva uma mensagem para o doador..."
+              placeholderTextColor="#9AA0A6"
+              multiline
+              maxLength={300}
+              value={mensagem}
+              onChangeText={setMensagem}
+            />
+
+            <Pressable
+              style={styles.button}
+              onPress={handleSolicitar}
+              disabled={carregando}
+            >
+              {carregando ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Solicitar doação</Text>
+              )}
+            </Pressable>
+          </>
+        ) : (
           <View style={styles.popup}>
             <Text style={styles.popupText}>
-              Solicitação de doação enviada com sucesso!
+              Solicitação enviada com sucesso! Aguarde o doador aceitar.
             </Text>
           </View>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
