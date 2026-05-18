@@ -12,13 +12,15 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroStyle";
 import { cadastrarUsuario } from "../services/authService";
 import { setUidAtual } from "../userSession";
+import EstadoPicker from "../components/EstadoPicker";
 
 export default function CadastroScreen({ setScreen, setUsuario }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [localizacao, setLocalizacao] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState("receptor");
   const [carregando, setCarregando] = useState(false);
 
@@ -53,6 +55,12 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
       Alert.alert("Atenção", "Telefone inválido.");
       return;
     }
+    if (cidade.length > 50) {
+      Alert.alert("Atenção", "Cidade deve ter no máximo 50 caracteres.");
+      return;
+    }
+
+    const localizacao = cidade && estado ? `${cidade} - ${estado}` : estado || "";
     if (localizacao.length > 80) {
       Alert.alert("Atenção", "Localização deve ter no máximo 80 caracteres.");
       return;
@@ -141,16 +149,26 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Localização</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Cidade - Estado"
-          placeholderTextColor="#9AA0A6"
-          value={localizacao}
-          onChangeText={setLocalizacao}
-          maxLength={80}
+        <Text style={styles.label}>Estado</Text>
+        <EstadoPicker
+          value={estado}
+          onChange={setEstado}
         />
       </View>
+
+      {estado !== "" && (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Cidade</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite sua cidade"
+            placeholderTextColor="#9AA0A6"
+            value={cidade}
+            onChangeText={setCidade}
+            maxLength={50}
+          />
+        </View>
+      )}
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Tipo de usuário</Text>
@@ -158,14 +176,14 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
           <Pressable
             style={[
               styles.userTypeButton,
-              tipoUsuario === "doador" && styles.userTypeButtonActiveWhite,
+              tipoUsuario === "doador" && styles.userTypeButtonActive,
             ]}
             onPress={() => setTipoUsuario("doador")}
           >
             <Text
               style={[
                 styles.userTypeButtonText,
-                tipoUsuario === "doador" && styles.userTypeButtonTextActiveWhite,
+                tipoUsuario === "doador" && styles.userTypeButtonTextActive,
               ]}
             >
               Sou doador
@@ -175,17 +193,14 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
           <Pressable
             style={[
               styles.userTypeButton,
-              styles.userTypeButtonGreen,
-              tipoUsuario === "receptor" && styles.userTypeButtonActiveGreen,
+              tipoUsuario === "receptor" && styles.userTypeButtonActive,
             ]}
             onPress={() => setTipoUsuario("receptor")}
           >
             <Text
               style={[
                 styles.userTypeButtonText,
-                styles.userTypeButtonTextGreenBase,
-                tipoUsuario === "receptor" &&
-                  styles.userTypeButtonTextActiveGreen,
+                tipoUsuario === "receptor" && styles.userTypeButtonTextActive,
               ]}
             >
               Sou receptor
@@ -207,4 +222,4 @@ export default function CadastroScreen({ setScreen, setUsuario }) {
       </Pressable>
     </ScrollView>
   );
-} 
+}
