@@ -66,17 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  userTypeButtonGreen: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#2E7D32",
-  },
-
-  userTypeButtonActiveWhite: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#2E7D32",
-  },
-
-  userTypeButtonActiveGreen: {
+  userTypeButtonActive: {
     backgroundColor: "#2E7D32",
     borderColor: "#2E7D32",
   },
@@ -87,15 +77,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
 
-  userTypeButtonTextGreenBase: {
-    color: "#2E7D32",
-  },
-
-  userTypeButtonTextActiveWhite: {
-    color: "#111827",
-  },
-
-  userTypeButtonTextActiveGreen: {
+  userTypeButtonTextActive: {
     color: "#FFFFFF",
   },
 
