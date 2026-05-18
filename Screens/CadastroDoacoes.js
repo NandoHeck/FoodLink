@@ -11,19 +11,26 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../Styles/CadastroDoacoesStyles";
 import { salvarDoacao } from "../services/doacaoService";
+import EstadoPicker from "../components/EstadoPicker";
 
 export default function CadastroDoacoes({ setScreen }) {
   const [tipoAlimento, setTipoAlimento] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [horario, setHorario] = useState("");
-  const [localizacao, setLocalizacao] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [publicado, setPublicado] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
   async function handlePublicar() {
+    const localizacao = cidade && estado ? `${cidade} - ${estado}` : estado || "";
+
     if (!tipoAlimento || !quantidade || !localizacao) {
-      Alert.alert("Atenção", "Tipo de alimento, quantidade e localização são obrigatórios.");
+      Alert.alert(
+        "Atenção",
+        "Tipo de alimento, quantidade e localização são obrigatórios."
+      );
       return;
     }
     if (tipoAlimento.length > 60) {
@@ -36,6 +43,10 @@ export default function CadastroDoacoes({ setScreen }) {
     }
     if (horario.length > 40) {
       Alert.alert("Atenção", "Horário deve ter no máximo 40 caracteres.");
+      return;
+    }
+    if (cidade.length > 50) {
+      Alert.alert("Atenção", "Cidade deve ter no máximo 50 caracteres.");
       return;
     }
     if (localizacao.length > 80) {
@@ -112,16 +123,26 @@ export default function CadastroDoacoes({ setScreen }) {
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Localização</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Cidade - Bairro"
-          placeholderTextColor="#9AA0A6"
-          value={localizacao}
-          onChangeText={setLocalizacao}
-          maxLength={80}
+        <Text style={styles.label}>Estado</Text>
+        <EstadoPicker
+          value={estado}
+          onChange={setEstado}
         />
       </View>
+
+      {estado !== "" && (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Cidade</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite a cidade"
+            placeholderTextColor="#9AA0A6"
+            value={cidade}
+            onChangeText={setCidade}
+            maxLength={50}
+          />
+        </View>
+      )}
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Observações</Text>
